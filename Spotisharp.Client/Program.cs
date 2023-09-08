@@ -11,7 +11,7 @@ using VideoLibrary;
 CConsole.WriteLine("Spotisharp v" + 
     Assembly.GetExecutingAssembly().GetName().Version!.ToString());
 
-CConsole.WriteLine($"(\u00a9) 2021-2022 Damian Ziolo");
+CConsole.WriteLine($"(\u00a9) 2020-2022 Damian Ziolo");
 
 if (!ConfigManager.Init())
 {
@@ -134,8 +134,8 @@ await Task.WhenAll(Enumerable.Range(0, workersCount).Select(async workerId =>
     int positionY = topCursorPosition + workerId;
     while (trackInfoBag.TryTake(out TrackInfoModel? trackInfo))
     {
-        string safeArtistName = FilenameResolver.RemoveForbiddenChars(trackInfo.Artist);
-        string safeTitle = FilenameResolver.RemoveForbiddenChars(trackInfo.Title);
+        string safeArtistName = FilenameResolver.RemoveForbiddenChars(trackInfo.Artist, StringType.Filename);
+        string safeTitle = FilenameResolver.RemoveForbiddenChars(trackInfo.Title, StringType.Filename);
         string fullName = safeArtistName + " - " + safeTitle;
 
         DirectoryInfo trackDir = Directory.CreateDirectory
@@ -143,7 +143,7 @@ await Task.WhenAll(Enumerable.Range(0, workersCount).Select(async workerId =>
                     Path.Combine
                     (
                         ConfigManager.Properties.MusicDirectory,
-                        FilenameResolver.RemoveForbiddenChars(trackInfo.Playlist)
+                        FilenameResolver.RemoveForbiddenChars(trackInfo.Playlist, StringType.Filename)
                     )
                 );
 
@@ -263,6 +263,11 @@ await Task.WhenAll(Enumerable.Range(0, workersCount).Select(async workerId =>
         }
 
         CConsole.WriteLine($"W #{workerId} ::: Adding metadata ::: {fullName}", CConsoleType.Debug);
+        if (!File.Exists(convertedFilePath))
+        {
+            CConsole.WriteLine($"W #{workerId} ::: Not Exist In Folder ::: {fullName}", CConsoleType.Debug);
+            continue;
+        }
 
         using (TagLib.File file = TagLib.File.Create(convertedFilePath))
         {
